@@ -7,6 +7,7 @@ Create the backend of a system to measure ASL3 usage and selected parameters for
 - Per node registration via IAX, http or both.
 - Asterisk up and reload times.
 - Channel driver in use per node.
+- Server generated timestamp of data post.  
 
 ## Reports
 Collected data will be available to AllStarLink personnel only and for the propose of understanding ASL3 adoption and reliabilty.
