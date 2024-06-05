@@ -1,6 +1,9 @@
-# Goal
+# README.md
 
-Create the backend of a system to measure ASL3 usage and selected parameters for the propose of understanding the adoption and relibality of ASL3. Nodes must be registered with register.allstarlink.org in order to participate. No personal or sensitive data shall be collected. System shall consist of a web site for reporting, a proper API for collection from client, and data storage. 
+Create the backend of a system to measure ASL3 usage and selected parameters for the propose of understanding the adoption and relibality of ASL3.
+
+## Requirements
+Nodes must be registered with register.allstarlink.org in order to participate. No personal or sensitive data shall be collected. System shall consist of a web site for reporting, a proper API for collection from client, and data storage. 
 
 ## Data elements
 - Version number of ASL3 Debian packages.
