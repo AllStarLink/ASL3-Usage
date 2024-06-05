@@ -13,4 +13,4 @@ Nodes must be registered with register.allstarlink.org in order to participate. 
 - Server generated timestamp of data post.  
 
 ## Reports
-Collected data will be available to AllStarLink personnel only and for the propose of understanding ASL3 adoption and reliabilty.
+Collected data will be user ID and password protected and available only to AllStarLink personnel for the propose of understanding ASL3 adoption and reliabilty.
