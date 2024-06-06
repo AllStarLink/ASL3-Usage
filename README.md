@@ -12,10 +12,10 @@ Create the backend of a system to measure ASL3 usage and selected parameters for
 
 ## Data elements
 - Version number of ASL3 Debian packages.
-- Per node registration via IAX and http with server generated timestamps.
+- Per node registration via IAX and http with server generated datetimestamps.
 - Asterisk up and reload times.
 - Channel driver in use per node.
-- Server generated timestamp of API post.  
+- Server generated datetimestamp of API post.  
 
 ## Reports
 Collected data will be user ID and password protected and available only to AllStarLink personnel for the propose of understanding ASL3 adoption and reliabilty.
