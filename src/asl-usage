@@ -1,0 +1,169 @@
+#!/usr/bin/python3
+# almon3.py - Monitor ASL Asterisk server for events
+#
+# Copyright(C) 2023-2024 AllStarLink
+# ASL3-Usage and all components are Licensed under the AGPLv3
+# see https://raw.githubusercontent.com/AllStarLink/ASL3-Usage/develop/LICENSE
+#
+
+import argparse
+import asyncio
+import configparser
+import errno
+import logging
+import logging.handlers
+import os
+import re
+import signal
+import sys
+
+_BUILD_ID = "@@HEAD-DEVELOP@@"
+
+
+# Handle Signals
+def sigterm_handler(_signo, _stack_frame):
+    log.info("exiting on signal %d", _signo)
+    for t in __global_tasks:
+        log.debug("killing task: %s", t.get_name())
+        t.cancel(msg="terminate by signal")
+    sys.exit(0)    
+signal.signal(signal.SIGINT, sigterm_handler)
+signal.signal(signal.SIGHUP, sigterm_handler)
+signal.signal(signal.SIGTERM, sigterm_handler)
+
+def sigusr1_handler(_signo, _stack_frame):
+    log.info("received SIGUSR1; refreshing configuration and database")
+    try:
+
+        node_configuration = node_configs.NodeConfigs(config_file, filter_list)
+        web_configuration = web_configs.WebConfigs(web_config_file)
+        if os.path.exists(menu_config_file):
+            menu_ini = configparser.ConfigParser()
+            menu_ini.optionxform = str
+            menu_ini.read(menu_config_file)
+            # build this as a string to preserve ordering later
+            # in Javascript
+            full_menu = "[ "
+            for m in menu_ini:
+                if m != "DEFAULT":
+                    menu_string = "[";
+                    for sm in menu_ini[m]:
+                        menu_string += f"{{\"{sm}\" : \"{menu_ini[m][sm]}\"}}, "
+                    menu_string = re.sub(r",\s$", "] ", menu_string)
+                    menu_string = f"{{ \"{m}\" : {menu_string} }}";
+                    full_menu += f"{menu_string} ,"
+            full_menu = re.sub(r",$", "]", full_menu)
+            web_configuration.menu = full_menu
+        server_security.reload_db()
+        log.info("reloaded node, web, menu, and sercurity configs")
+
+    except Exception as e:
+        log.error("unable to get allmondb: %s", e)
+        if len(allmon_db.node_database) > 0:
+            log.info("info fields will use cached data until an update succeeds")
+        else:
+            log.error("info fields will be labeled UNAVAILABLE until the data is retrieved")
+signal.signal(signal.SIGUSR1, sigusr1_handler)
+    
+
+## Startup coroutines
+async def start_tasks():
+    log.debug("enter start_tasks()")
+    tasks = [] 
+    try:
+        log.info("starting asl-usage-server master http on port %s", web_configuration.http_port)
+        a3server = asl-usage_server.ServerWS(web_configuration, 
+            node_configuration, server_security)
+        tasks.append(asyncio.create_task(a3server.main()))
+
+        log.info("starting node_db updater")
+        tasks.append(asyncio.create_task(allmon_db.db_updater(node_configuration, web_configuration.node_overrides)))
+
+        global __global_tasks
+        __global_tasks = tasks
+
+        try:
+            await asyncio.gather(*tasks)
+        except asyncio.CancelledError:
+            log.info("all tasks in start_tasks() cancelled")
+
+    
+    except asyncio.CancelledError as e:
+        log.debug("ending asyncio tasks")
+        for t in tasks:
+            t.cancel()
+            tasks = []
+
+    except Exception as e:
+        log.debug("exception of start_tasks()")
+        raise e
+
+    finally:
+        log.debug("finally of start_tasks()")
+        for t in tasks:
+            t.cancel()
+
+
+######## MAIN PROGRAM ########
+
+# Master Task Array
+__global_tasks = []
+
+# Args and Log Setup
+ap = argparse.ArgumentParser(description="AllStarLink Usage Server")
+ap.add_argument("--webconfig", help="path to INI configuration for web services (default /etc/asl-usage/web.ini")
+ap.add_argument("--debug", help="enable debug-level logging output", action="store_true")
+ap.add_argument("--debugmodule", type=str, help="enable debugging only for module specified")
+ap.add_argument("--version", help="get the version of the software", action="version", version='%(prog)s {}'.format(_BUILD_ID))
+args = ap.parse_args()
+
+log = logging.getLogger("asl-usage-server")
+lh = logging.StreamHandler()
+lf = logging.Formatter(fmt="%(levelname)s: (%(name)s) %(message)s")
+lh.setFormatter(lf)
+log.addHandler(lh)
+
+if args.debugmodule:
+    mlog = logging.getLogger(args.debugmodule)
+else:
+    mlog = logging.getLogger("asl_usage")
+mlog.addHandler(lh)
+
+if args.debug:
+    log.setLevel(logging.DEBUG)
+    mlog.setLevel(logging.DEBUG)
+else:
+    log.setLevel(logging.INFO)
+    mlog.setLevel(logging.INFO)
+
+if args.webconfig:
+    web_config_file = args.webconfig
+else:
+    web_config_file = "/etc/asl-usage/web.ini"
+
+try:
+    # Config Parse
+    if not os.path.exists(web_config_file):
+        raise FileNotFoundError(errno.ENOENT, os.strerror(errno.ENOENT), web_config_file)
+    log.debug("web config file is %s", web_config_file)
+    web_configuration = web_configs.WebConfigs(web_config_file)
+
+    if not os.path.exists(web_configuration.user_table):
+        raise FileNotFoundError(errno.ENOENT, os.strerror(errno.ENOENT), web_configuration.user_table)
+    log.debug("user_table file is %s", web_configuration.user_table)
+    server_security = security.Security(web_configuration.user_table,
+        web_configuration.restrictions_table)
+
+    allmon_db = node_db.ASLNodeDB()
+except Exception as e:
+    raise e
+
+# Execute the main status gathering loop
+log.debug("starting the main work loop")
+try:
+    asyncio.run(start_tasks())
+
+finally:
+    log.debug("__main__ finally")
+
+sys.exit(0)
