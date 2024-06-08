@@ -23,8 +23,8 @@ class Security:
     user_file = None
 
     def __init__(self, user_file, user_restrictions):
-        self.session_db = dict()
-        self.userdb = dict()
+        self.session_db = {}
+        self.userdb = {}
         self.restricted_users = []
         self.restrictdb = []
         self.user_file = user_file
@@ -32,14 +32,14 @@ class Security:
         self.__load_db()
 
     def __load_db(self):
-        with open(self.user_file, newline="") as uf:
+        with open(self.user_file, newline="", encoding="utf-8") as uf:
             users = csv.DictReader(uf, delimiter="|")
             for row in users:
                 self.userdb.update({ row["user"] : row["pass"] })
         log.debug("loaded %s entries from %s", len(self.userdb), self.user_file)
         uf.close()
 
-        with open(self.user_restrictions, newline="") as rf:
+        with open(self.user_restrictions, newline="", encoding="utf-8") as rf:
             restrictions = csv.DictReader(rf, delimiter="|", fieldnames=["user","rs"])
             for row in restrictions:
                 if row['user'][:1] == "#":
