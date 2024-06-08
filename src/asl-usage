@@ -16,29 +16,18 @@ import os
 import re
 import signal
 import sys
+import aiomysql
 
 from asl_usage import  node_db, security, usage_server, web_configs
 
 _BUILD_ID = "@@HEAD-DEVELOP@@"
 
 
-# Handle Signals
-def sigterm_handler(_signo, _stack_frame):
-    log.info("exiting on signal %d", _signo)
-    for t in __global_tasks:
-        log.debug("killing task: %s", t.get_name())
-        t.cancel(msg="terminate by signal")
-    sys.exit(0)    
-signal.signal(signal.SIGINT, sigterm_handler)
-signal.signal(signal.SIGHUP, sigterm_handler)
-signal.signal(signal.SIGTERM, sigterm_handler)
-
 def sigusr1_handler(_signo, _stack_frame):
-    log.info("received SIGUSR1; refreshing configuration and database")
+    log.info("received SIGUSR1; reread security database")
     try:
-        web_configuration = web_configs.WebConfigs(web_config_file)
         server_security.reload_db()
-        log.info("reloaded node, web, menu, and sercurity configs")
+        log.info("reloaded security database")
 
     except Exception as e:
         log.error(e)
@@ -49,8 +38,14 @@ async def start_tasks():
     log.debug("enter start_tasks()")
     tasks = [] 
     try:
+        log.info("initializing database pool")
+        dbpool = await aiomysql.create_pool(
+            host = web_configuration.db_host, port = web_configuration.db_port,
+            user = web_configuration.db_user, password = web_configuration.db_pass,
+            db = web_configuration.db_db )
+
         log.info("starting asl-usage http on port %s", web_configuration.http_port)
-        server = usage_server.UsageServer(web_configuration, server_security)
+        server = usage_server.UsageServer(web_configuration, server_security, dbpool)
         tasks.append(asyncio.create_task(server.main()))
 
         log.info("starting node_db updater")
@@ -67,6 +62,8 @@ async def start_tasks():
     
     except asyncio.CancelledError as e:
         log.debug("ending asyncio tasks")
+        dbpool.close()
+        await dbpool.wait_closed()
         for t in tasks:
             t.cancel()
             tasks = []
@@ -77,6 +74,8 @@ async def start_tasks():
 
     finally:
         log.debug("finally of start_tasks()")
+        dbpool.close()
+        await dbpool.wait_closed()
         for t in tasks:
             t.cancel()
 

@@ -10,12 +10,14 @@ import base64
 from itertools import cycle
 import json
 import logging
+import pprint
 import re
 import time
 import websockets
 from aiohttp import web
 from aiohttp_session import get_session, setup
 from aiohttp_session import SimpleCookieStorage
+import aiomysql
 from .. import security, web_configs
 
 __BUILD_ID = "@@HEAD-DEVELOP@@"
@@ -26,10 +28,11 @@ class UsageServer:
 
     __MAX_MSG_LEN = 256
 
-    def __init__(self, configs_web, server_security):
+    def __init__(self, configs_web, server_security, dbpool):
         self.config_web = configs_web
-        self.httpserver = web.Application()
         self.server_security = server_security
+        self.db = dbpool
+
 
     @staticmethod
     def __get_json_error(message):
@@ -48,7 +51,7 @@ class UsageServer:
     ##
     ## Security Auth Functions
     ##
-    async def __proc_auth(self, request):
+    async def proc_auth(self, request):
         try:
             c = request.url.path.split("/")
             r_json = None
@@ -75,7 +78,7 @@ class UsageServer:
     
             return web.Response(status=400)
 
-    async def __proc_login(self, request):
+    async def proc_login(self, request):
         req = await request.post()
         session = await get_session(request)
 
@@ -99,21 +102,29 @@ class UsageServer:
 
         return web.Response(text=r_txt, content_type="text/json")
 
+    async def proc_usage(self, request):
+        req = await request.text()
+        pprint.pp(req, indent=4)
+        return web.Response(status=200)    
+
     ##
     ## Server Logic
     ##
     async def main(self):
 
-        # Session
-        setup(self.httpserver, SimpleCookieStorage())
+        # setup base server
+        httpserver = web.Application()
+        setup(httpserver, SimpleCookieStorage())
 
         # Handlers for different API commands
         api_routes = [
-            web.post("/login", self.__proc_login),
-            web.get(r"/auth/{cmd:.*}", self.__proc_auth),
+            web.post("/login", self.proc_login),
+            web.get(r"/auth/{cmd:.*}", self.proc_auth),
+            web.post("/usage", self.proc_usage)
             ]
-        self.httpserver.add_routes(api_routes)
-        runner = web.AppRunner(self.httpserver)
+        httpserver.add_routes(api_routes)
+        
+        runner = web.AppRunner(httpserver)
         await runner.setup()
         site = web.TCPSite(runner, 
             self.config_web.http_bind_addr,

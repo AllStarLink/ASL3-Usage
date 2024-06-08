@@ -47,7 +47,7 @@ class WebConfigs:
             self.db_port = int(config["web"]["DB_PORT"])
         else:
             self.db_port = 3306
-        log.info("Database port: %s", self.db_prt)
+        log.info("Database port: %s", self.db_port)
 
         if "DB_USER" in config["web"]:
             self.db_user =  str(config["web"]["DB_USER"])
