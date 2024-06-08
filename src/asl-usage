@@ -45,7 +45,7 @@ async def start_tasks():
             db = web_configuration.db_db )
 
         log.info("starting asl-usage http on port %s", web_configuration.http_port)
-        server = usage_server.UsageServer(web_configuration, server_security, dbpool)
+        server = usage_server.UsageServer(web_configuration, server_security, dbpool, allmon_db)
         tasks.append(asyncio.create_task(server.main()))
 
         log.info("starting node_db updater")
