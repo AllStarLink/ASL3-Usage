@@ -44,7 +44,7 @@ deb:	debclean debprep
 	debchange --distribution stable --package $(PKGNAME) \
 		--newversion $(EPOCHVER)$(RELVER)-$(DEBVER).$(RELPLAT) \
 		"Autobuild of $(EPOCHVER)$(RELVER)-$(DEBVER) for $(RELPLAT)"
-	dpkg-buildpackage -b
+	dpkg-buildpackage -b 
 	git checkout debian/changelog
 
 debchange:
@@ -70,5 +70,6 @@ debclean:
 	rm -f debian/*.substvars
 	rm -rf debian/$(SRCNAME)/ debian/.debhelper/
 	rm -f debian/debhelper-build-stamp debian/files debian/$(SRCNAME).substvars
-	rm -f debian/*.debhelper
+	rm -f debian/*.debhelper debian/*.debhelper.log
+	
 
