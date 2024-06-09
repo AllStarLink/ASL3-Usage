@@ -23,7 +23,7 @@ ifdef DESTDIR
 FULL_DESTDIR = $(shell readlink -f $(DESTDIR))
 endif
 
-ROOT_FILES = LICENSE README.md
+ROOT_FILES = LICENSE README.md aslusage.sql
 ROOT_INSTALLABLES = $(patsubst %, $(FULL_DESTDIR)$(docdir)/%, $(ROOT_FILES))
 
 default:
