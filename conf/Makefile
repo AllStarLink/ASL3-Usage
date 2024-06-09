@@ -1,6 +1,6 @@
 sysconfdir ?= /etc/asl-usage
 prefix ?= /usr
-docdir ?= $(prefix)/share/doc/allmon3
+docdir ?= $(prefix)/share/doc/asl-usage
 
 CONF_FILES = $(filter-out Makefile tmp , $(wildcard *))
 CONF_INSTALLABLES = $(patsubst %, $(DESTDIR)$(sysconfdir)/%, $(CONF_FILES))
