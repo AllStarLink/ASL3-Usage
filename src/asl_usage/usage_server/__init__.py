@@ -13,7 +13,6 @@ import logging
 import pprint
 import re
 import time
-import websockets
 from aiohttp import web
 from aiohttp_session import get_session, setup
 from aiohttp_session import SimpleCookieStorage
