@@ -1,8 +1,8 @@
 #
 # Build variables
 #
-SRCNAME 	= allmon3
-PKGNAME		= $(SRCNAME)
+SRCNAME 	= ASL3-Usage
+PKGNAME		= asl-usage
 RELVER 		= 1.0.0
 DEBVER 		= 1
 RELPLAT		?= deb$(shell lsb_release -rs 2> /dev/null)
