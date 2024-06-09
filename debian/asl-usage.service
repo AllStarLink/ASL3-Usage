@@ -1,0 +1,14 @@
+[Unit]
+Description=ASL3 Telemetry Collector
+After=network.target
+
+[Service]
+Type=exec
+User=aslusage
+Group=aslusage
+Environment="PATH=/usr/bin:/bin:/usr/sbin:/sbin"
+ExecStart=/usr/bin/asl-usage
+ExecReload=kill -USR1 $MAINPID
+
+[Install]
+WantedBy=multi-user.target
