@@ -23,8 +23,8 @@ do_configure() {
 	fi
 
 	## Ensure Perms on Sensitive Files
-	chown aslusage:aslusage /etc/aslusage/aslusage.ini /etc/aslusage/user*
-	chmod 660 /etc/aslusage/aslusage.ini /etc/aslusage/user*
+	chown aslusage:aslusage /etc/asl-usage/web.ini /etc/aslusage/user*
+	chmod 660 /etc/aslusage/web.ini /etc/aslusage/user*
 }
 
 case "$1" in
