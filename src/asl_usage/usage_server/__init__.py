@@ -105,6 +105,8 @@ class UsageServer:
     ## Usage POSTs
     ##
     async def proc_usage(self, request):
+
+        is_successful = True
         try:
             req = await request.text()
             data = json.loads(req)
@@ -129,9 +131,13 @@ class UsageServer:
 
             pkglist = json.dumps(data["pkgs"])
     
+            pprint.pp(data["nodes"])
+            log.debug(data["nodes"].__class__.__name__)
+            log.debug(len(data["nodes"]))
             for node in data["nodes"]:
+                log.debug(f"processing node {node}")
                 if str(node) in self.nodedb.node_database:
-                    log.debug("in")
+                    log.debug(f"{node} in node_database")
                     channeltype = data["nodes-channels"][str(node)]
                     sql = f"""REPLACE INTO nodes
                             (uuid, astversion, aslversion, aslpkgver, node, uptime,
@@ -149,14 +155,18 @@ class UsageServer:
                             await cur.execute(sql)
                             await conn.commit()
     
-                    return web.Response(status=200)    
                 else:
-                    log.debug("false")
-                    return web.Response(status=403)
+                    log.error(f"usage received for {node} but not in node_database; discarding")
+                    is_successful = False
 
         except Exception as e:
             log.error(e)
             return web.Response(status=404)
+
+        if is_successful:
+            return web.Response(status=200)
+        else:
+             return web.Response(status=503)
     ##
     ## Reports
     ##
