@@ -35,11 +35,11 @@ CREATE TABLE `nodes` (
   `distro` varchar(50) NOT NULL,
   `relver` varchar(50) NOT NULL,
   `kernel` varchar(50) NOT NULL,
-  `arch` varchar(50) NOT NULL DEFAULT '0',
+  `arch` varchar(50) NOT NULL,
   `pkglist` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL CHECK (json_valid(`pkglist`)),
   `repdate` datetime NOT NULL DEFAULT current_timestamp(),
   `fullastver` varchar(100) NOT NULL,
-  PRIMARY KEY (`uuid`)
+  PRIMARY KEY (`node`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
