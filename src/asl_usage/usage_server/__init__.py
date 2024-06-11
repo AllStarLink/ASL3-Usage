@@ -7,6 +7,7 @@
 
 import asyncio
 import base64
+import datetime
 from itertools import cycle
 import json
 import logging
@@ -170,19 +171,63 @@ class UsageServer:
     ##
     ## Reports
     ##
+
+    async def quick_select(self, sql_txt):
+        try:
+            async with self.db.acquire() as conn:
+                async with conn.cursor() as cur:
+                    await cur.execute(sql_txt);
+                    return await cur.fetchall()
+        except Exception as e:
+            log.error(e)
+            return None
+
+    async def quick_select_single(self, sql_txt):
+        try:
+            r = await self.quick_select(sql_txt)
+            return str(r[0][0])
+        except Exception as e:
+            log.error(e)
+            return None
+            
     async def proc_reports(self, request):
+        r_txt = None
         try:
             c = request.url.path.split("/")
-            r_txt = None
-            if c[2] == "basic":
-                async with self.db.acquire() as conn:
-                    async with conn.cursor() as cur:
-                        sql = "SELECT COUNT(DISTINCT uuid) AS node_count FROM nodes"
-                        await cur.execute(sql)
-                        r = await cur.fetchall()
-                        r_txt = f"UUIDs: {r[0]}"
+            if c[2] == "basic" or c[2] == "basic/":
+                sql = "SELECT COUNT(DISTINCT uuid) FROM nodes"
+                r = await self.quick_select_single(sql)
+                r_txt = f"{'Distinct Servers':>20}: {r:>4}\n"
+                sql = "SELECT COUNT(DISTINCT node) FROM nodes"
+                r = await self.quick_select_single(sql)
+                r_txt += f"{'Distinct Nodes':>20}: {r:>4}\n\n"
+    
+                r_txt += f"{'Channel Types':>20}\n"
+                sql = "SELECT channeltype, COUNT(channeltype) FROM nodes GROUP BY channeltype"
+                rows = await self.quick_select(sql)
+                for row in rows:
+                    r_txt += f"{row[0]:>20}: {row[1]:>4}\n"
 
-                
+            elif c[2] == "dump" or c[2] == "dump/":
+                sql = """SELECT repdate,node,fullastver,channeltype,
+                    SEC_TO_TIME(uptime), SEC_TO_TIME(reloadtime), uuid
+                    FROM nodes ORDER BY repdate DESC, node ASC;
+                    """
+                rows = await self.quick_select(sql)
+               
+                r_txt =   "------------------------------------------------------------------------------------------------------------------------------------------------------------------------------\n" 
+                r_txt += f" {'Report In Time':<20}| {'Node':<8}| {'Version':<36}| {'Channel Type':<20}| {'Uptime':<20}| {'Reload Time':<20}| {'UUID':<37}\n"
+                r_txt +=  "------------------------------------------------------------------------------------------------------------------------------------------------------------------------------\n"
+
+                for r in rows:
+                    rit = r[0].strftime("%Y-%m-%d %H:%M:%S %Z")
+                    ut = str(r[4])
+                    rt = str(r[5])
+                    r_txt += f" {rit:<20}| {r[1]:<8}| {r[2]:<36}| {r[3]:<20}| {ut:<20}| {rt:<20}| {r[6]:<37}\n"
+
+                r_txt +=  "-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------\n"
+
+
         except (IndexError, KeyError):
             log.debug("IndexError/KeyError")
             r_txt = None
@@ -193,8 +238,8 @@ class UsageServer:
         finally:
             if r_txt:
                 return web.Response(text=r_txt, content_type="text/plain")
-    
-            return web.Response(status=400)
+ 
+            return web.Response(text="503: an error occurred", content_type="text/plain", status=503)
 
 
 
