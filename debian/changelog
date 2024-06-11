@@ -1,3 +1,9 @@
+asl-usage (1.1.0-1) stable; urgency=medium
+
+  * Add basic reporting
+
+ -- Jason McCormick <jason@mfamily.org>  Mon, 10 Jun 2024 20:37:29 -0400
+
 asl-usage (1.0.0-1.deb12) stable; urgency=medium
 
   * Autobuild of 1.0.0-1 for deb12
