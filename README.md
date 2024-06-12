@@ -38,4 +38,4 @@ PKGS = [{ "allmon3" : "1.2.1-2" , "asl-apt-repos" : "1.4-1.deb12" , "asl3" : "3.
 
 ## Server Architecutre
 This server process loads data into a MySQL database for
-further processing and reporting.
+further processing and reporting. See https://repo.allstarlink.org/usage/reports/
