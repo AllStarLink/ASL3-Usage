@@ -140,20 +140,19 @@ class UsageServer:
                 if str(node) in self.nodedb.node_database:
                     log.debug(f"{node} in node_database")
                     channeltype = data["nodes-channels"][str(node)]
-                    sql = f"""REPLACE INTO nodes
-                            (uuid, astversion, aslversion, aslpkgver, node, uptime,
-                            reloadtime, channeltype, os, distro, relver, kernel,
-                            arch, pkglist, fullastver)
-                            VALUES(
-                                '{data["uuid"]}', '{astversion}', '{aslversion}', '{aslpkgver}',
-                                {node}, {uptime}, {reloadtime}, '{channeltype}', 
-                                '{data["os"]}', '{data["distro"]}', '{data["release"]}',
-                                '{data["kernel"]}', '{arch}', '{pkglist}', '{data["ast-ver"]}'
-                            )
-                        """
+                    sql = """REPLACE INTO nodes
+                        (uuid, astversion, aslversion, aslpkgver, node, uptime,
+                        reloadtime, channeltype, os, distro, relver, kernel,
+                        arch, pkglist, fullastver)
+                        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)"""
+
+                    values = (data["uuid"], astversion, aslversion, aslpkgver, node, uptime,
+                        reloadtime, channeltype, data["os"], data["distro"], data["release"],
+                        data["kernel"], arch, pkglist, data["ast-ver"])
+
                     async with self.db.acquire() as conn:
                         async with conn.cursor() as cur:
-                            await cur.execute(sql)
+                            await cur.execute(sql, values)
                             await conn.commit()
     
                 else:
