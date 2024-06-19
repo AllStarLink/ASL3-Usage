@@ -133,8 +133,6 @@ class UsageServer:
             pkglist = json.dumps(data["pkgs"])
     
             pprint.pp(data["nodes"])
-            log.debug(data["nodes"].__class__.__name__)
-            log.debug(len(data["nodes"]))
             for node in data["nodes"]:
                 log.debug(f"processing node {node}")
                 if str(node) in self.nodedb.node_database:
