@@ -78,7 +78,7 @@ CREATE EVENT daily_usage
 ON SCHEDULE EVERY 1 DAY
 STARTS CURRENT_DATE + INTERVAL 1 DAY
 DO
-  INSERT INTO asl_usage (record_count, server_count, ast_count, asl_count, node_count, dahdi_count, simpleusb_count, usbradio_count, voter_count, radio_count, collected_time)
+  INSERT INTO asl_usage (record_count, server_count, ast_count, asl_count, node_count, dahdi_count, simpleusb_count, usbradio_count, voter_count, collected_time)
   SELECT COUNT(*),
   COUNT(DISTINCT uuid),
   COUNT(DISTINCT astversion),
@@ -86,8 +86,7 @@ DO
   COUNT(DISTINCT node),
   SUM(CASE WHEN TRIM(channeltype) = 'dahdi' THEN 1 ELSE 0 END),
   SUM(CASE WHEN TRIM(channeltype) = 'simpleusb' THEN 1 ELSE 0 END),
-  SUM(CASE WHEN TRIM(channeltype) = 'usbradio' THEN 1 ELSE 0 END),
-  SUM(CASE WHEN TRIM(channeltype) = 'voter' THEN 1 ELSE 0 END),
   SUM(CASE WHEN TRIM(channeltype) = 'radio' THEN 1 ELSE 0 END),
+  SUM(CASE WHEN TRIM(channeltype) = 'voter' THEN 1 ELSE 0 END),
   NOW()
   FROM nodes;
