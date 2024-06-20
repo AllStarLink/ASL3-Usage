@@ -39,3 +39,13 @@ PKGS = [{ "allmon3" : "1.2.1-2" , "asl-apt-repos" : "1.4-1.deb12" , "asl3" : "3.
 ## Server Architecutre
 This server process loads data into a MySQL database for
 further processing and reporting. See https://repo.allstarlink.org/usage/reports/
+
+## Updating the daily_event
+
+How to update the daily_event should modification be needed.
+
+The daily_usage event is included in the full schema but having it separate eases workflow and insures history is not lost when/if the event is updated.
+
+To update the daily_usage event edit this file and do `mariadb aslusage < add_daily_event.sql
+
+Be sure to update the full schema with `mysqldump --no-data alsusage >  aslusage.sql` if any changes are made to the daily_usage event.
