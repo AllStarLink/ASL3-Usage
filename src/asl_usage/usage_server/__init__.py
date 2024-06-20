@@ -203,7 +203,7 @@ class UsageServer:
                 sql = "SELECT channeltype, COUNT(channeltype) FROM nodes GROUP BY channeltype"
                 rows = await self.quick_select(sql)
                 for row in rows:
-                    if row[0] == "radio":
+                    if row[0] == "Radio":
                         row_label = "USBRadio"
                     elif row[0] == "voter":
                         row_label = "RTCM/Voter"

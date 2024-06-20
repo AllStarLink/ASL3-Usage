@@ -1,3 +1,9 @@
+asl-usage (1.3.2-1) stable; urgency=medium
+
+  * Fix captiazliation of "Radio" for USBRadio 
+
+ -- Jason McCormick <jason@mfamily.org>  Thu, 20 Jun 2024 11:20:08 -0400
+
 asl-usage (1.3.1-1) stable; urgency=medium
 
   * 'radio' and 'USBRadio' are the same 
