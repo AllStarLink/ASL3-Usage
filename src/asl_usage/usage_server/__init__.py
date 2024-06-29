@@ -132,8 +132,9 @@ class UsageServer:
 
             pkglist = json.dumps(data["pkgs"])
     
-            pprint.pp(data["nodes"])
+            at_least_one_node = False
             for node in data["nodes"]:
+                at_last_one_node = True
                 log.debug(f"processing node {node}")
                 if str(node) in self.nodedb.node_database:
                     log.debug(f"{node} in node_database")
@@ -152,6 +153,8 @@ class UsageServer:
                         async with conn.cursor() as cur:
                             await cur.execute(sql, values)
                             await conn.commit()
+                    
+                    log.info(f"Processed node {node}")
     
                 else:
                     log.error(f"usage received for {node} but not in node_database; discarding")
@@ -159,12 +162,17 @@ class UsageServer:
 
         except Exception as e:
             log.error(e)
-            return web.Response(status=404)
+            return web.Response(status=500)
+
+        if not at_last_one_node:
+            log.error("Telemetry report from %s contained no local nodes")
+            return web.Response(status=400)
 
         if is_successful:
             return web.Response(status=200)
         else:
-             return web.Response(status=503)
+             return web.Response(status=500)
+
     ##
     ## Reports
     ##
