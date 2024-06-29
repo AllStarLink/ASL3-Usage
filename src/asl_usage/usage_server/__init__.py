@@ -134,7 +134,7 @@ class UsageServer:
     
             at_least_one_node = False
             for node in data["nodes"]:
-                at_last_one_node = True
+                at_least_one_node = True
                 log.debug(f"processing node {node}")
                 if str(node) in self.nodedb.node_database:
                     log.debug(f"{node} in node_database")
@@ -164,8 +164,8 @@ class UsageServer:
             log.error(e)
             return web.Response(status=500)
 
-        if not at_last_one_node:
-            log.error("Telemetry report from %s contained no local nodes")
+        if not at_least_one_node:
+            log.error("Telemetry report from %s contained no local nodes", data["uuid"])
             return web.Response(status=400)
 
         if is_successful:
