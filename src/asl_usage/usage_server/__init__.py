@@ -206,8 +206,24 @@ class UsageServer:
                 sql = "SELECT COUNT(DISTINCT node) FROM nodes"
                 r = await self.quick_select_single(sql)
                 r_txt += f"{'Distinct Nodes':>20}: {r:>4}\n\n"
+
+                r_txt += f"{'Arch Types':>20}\n"
+                r_txt += f"  ------------------------\n"
+                sql = "SELECT arch, COUNT(arch) FROM nodes GROUP BY arch"
+                rows = await self.quick_select(sql)
+                for row in rows:
+                    if row[0] == "amd64":
+                        row_label = "x86_64/amd64"
+                    elif row[0] == "arm64":
+                        row_label = "ARM64/arm64"
+                    else:
+                        row_label = row[0]
+                    r_txt += f"{row_label:>20}: {row[1]:>4}\n"
+                r_txt += "\n\n"
+
     
                 r_txt += f"{'Channel Types':>20}\n"
+                r_txt += f"  ------------------------\n"
                 sql = "SELECT channeltype, COUNT(channeltype) FROM nodes GROUP BY channeltype"
                 rows = await self.quick_select(sql)
                 for row in rows:
@@ -221,22 +237,22 @@ class UsageServer:
 
             elif c[2] == "dump" or c[2] == "dump/":
                 sql = """SELECT repdate,node,fullastver,channeltype,
-                    SEC_TO_TIME(uptime), SEC_TO_TIME(reloadtime), uuid
+                    SEC_TO_TIME(uptime), SEC_TO_TIME(reloadtime), uuid, arch
                     FROM nodes ORDER BY repdate DESC, node ASC;
                     """
                 rows = await self.quick_select(sql)
                
-                r_txt =   "------------------------------------------------------------------------------------------------------------------------------------------------------------------------------\n" 
-                r_txt += f" {'Report In Time':<20}| {'Node':<8}| {'Version':<36}| {'Channel Type':<20}| {'Uptime':<20}| {'Reload Time':<20}| {'UUID':<37}\n"
-                r_txt +=  "------------------------------------------------------------------------------------------------------------------------------------------------------------------------------\n"
+                r_txt =   "---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------\n" 
+                r_txt += f" {'Report In Time':<20}| {'Node':<8}| {'Version':<36}| {'Channel Type':<20}| {'Uptime':<20}| {'Reload Time':<20}| {'UUID':<37}| {'Arch':<7}\n"
+                r_txt +=  "---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------\n"
 
                 for r in rows:
                     rit = r[0].strftime("%Y-%m-%d %H:%M:%S %Z")
                     ut = str(r[4])
                     rt = str(r[5])
-                    r_txt += f" {rit:<20}| {r[1]:<8}| {r[2]:<36}| {r[3]:<20}| {ut:<20}| {rt:<20}| {r[6]:<37}\n"
+                    r_txt += f" {rit:<20}| {r[1]:<8}| {r[2]:<36}| {r[3]:<20}| {ut:<20}| {rt:<20}| {r[6]:<37}| {r[7]:<7}\n"
 
-                r_txt +=  "-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------\n"
+                r_txt +=  "---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------\n"
 
             elif c[2] == "daily" or c[2] == "daily/":
                 sql = "SELECT * FROM asl_usage ORDER BY collected_time DESC"
@@ -252,11 +268,11 @@ class UsageServer:
 
                 r_txt +=  "----------------------------------------------------------------------------------------------------------------------------------\n"
 
-        except (IndexError, KeyError):
+        except (IndexError, KeyError) as e:
             log.debug("IndexError/KeyError")
             r_txt = None
 
-        except Excpetion as e:
+        except Exception as e:
             log.error(e)
 
         finally:
